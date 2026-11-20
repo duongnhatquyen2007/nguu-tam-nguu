@@ -1,0 +1,6 @@
+{
+  "name": "Lễ Hội Chọi Trâu: Sới Hội Remix",
+  "description": "Đấu trường hành động nhịp điệu 2D Top-down chủ đề Dân Gian Remix — Giữ vững nhịp trống, đấu sừng cân não và đẩy đối thủ khỏi vạch vôi sới hội.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

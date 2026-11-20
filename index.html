@@ -1,0 +1,661 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <title>Lễ Hội Chọi Trâu: Sới Hội Remix</title>
+    <meta
+      name="description"
+      content="Đấu trường hành động nhịp điệu 2D Top-down chủ đề Dân Gian Remix — Giữ vững nhịp trống, đấu sừng cân não và đẩy đối thủ khỏi vạch vôi sới hội."
+    />
+    <meta property="og:title" content="Lễ Hội Chọi Trâu: Sới Hội Remix" />
+    <meta
+      property="og:description"
+      content="Giữ Vững Nhịp Trống, Cầu Mùa Bình An — Đấu trường Chọi Trâu Dân Gian Remix trên trình duyệt PC & Mobile."
+    />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=JetBrains+Mono:wght@500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/src/game/styles.css" />
+  </head>
+  <body>
+    <div id="app-shell">
+      <div id="stage-frame">
+        <canvas id="game-canvas" width="1280" height="720"></canvas>
+
+        <!-- HUD TRONG SỚI ĐẤU -->
+        <div id="gameplay-hud" class="hud-layer hidden">
+          <div class="hud-top-bar">
+            <!-- Player Card -->
+            <div class="fighter-panel player-panel">
+              <div class="fighter-meta">
+                <span id="player-hud-name" class="fighter-name">Ông Cầu Hắc Phong</span>
+                <span id="player-balance-text" class="fighter-sub tabular-nums">Thế Trụ 100%</span>
+              </div>
+              <div class="bar-track hp-track">
+                <div id="player-hp-fill" class="bar-fill hp-fill" style="width: 100%"></div>
+                <span id="player-hp-text" class="bar-value tabular-nums">100%</span>
+              </div>
+              <div class="sub-bars-row">
+                <div class="bar-track stamina-track">
+                  <div id="player-stamina-fill" class="bar-fill stamina-fill" style="width: 100%"></div>
+                  <span id="player-stamina-text" class="bar-value-sm tabular-nums">Thể lực 100%</span>
+                </div>
+                <div class="bar-track hype-track" id="player-hype-track">
+                  <div id="player-hype-fill" class="bar-fill hype-fill" style="width: 0%"></div>
+                  <span id="player-hype-text" class="bar-value-sm tabular-nums">Sĩ khí 0%</span>
+                </div>
+              </div>
+              <div class="rage-weak-row">
+                <div class="bar-track rage-track" id="player-rage-track">
+                  <div id="player-rage-fill" class="bar-fill rage-fill" style="width: 0%"></div>
+                  <span id="player-rage-text" class="bar-value-sm tabular-nums">Nộ khí 0%</span>
+                </div>
+                <span id="player-weakpoint-badge" class="weakpoint-badge tabular-nums">Điểm yếu 0/5</span>
+              </div>
+              <div id="player-status-line" class="status-line">Sẵn sàng</div>
+            </div>
+
+            <!-- Center Round Clock -->
+            <div class="round-clock-panel">
+              <div id="hud-round-label" class="round-label">Vòng 1 · Giáp Làng</div>
+              <div id="hud-timer" class="round-timer tabular-nums">75.0</div>
+              <div class="round-sub-row">
+                <span id="hud-bpm" class="tabular-nums">115 BPM</span>
+                <span aria-hidden="true">·</span>
+                <span id="hud-combo" class="tabular-nums">Combo 0</span>
+              </div>
+            </div>
+
+            <!-- Enemy Card -->
+            <div class="fighter-panel enemy-panel">
+              <div class="fighter-meta enemy-meta">
+                <span id="enemy-balance-text" class="fighter-sub tabular-nums">Thế Trụ 100%</span>
+                <span id="enemy-name" class="fighter-name">Bạch Tạng Sơn Cước</span>
+              </div>
+              <div class="bar-track hp-track">
+                <div id="enemy-hp-fill" class="bar-fill enemy-hp-fill" style="width: 100%"></div>
+                <span id="enemy-hp-text" class="bar-value tabular-nums">100%</span>
+              </div>
+              <div class="sub-bars-row">
+                <div class="bar-track stamina-track">
+                  <div id="enemy-stamina-fill" class="bar-fill stamina-fill" style="width: 100%"></div>
+                  <span id="enemy-stamina-text" class="bar-value-sm tabular-nums">Thể lực 100%</span>
+                </div>
+                <div class="bar-track hype-track">
+                  <div id="enemy-hype-fill" class="bar-fill enemy-hype-fill" style="width: 0%"></div>
+                  <span id="enemy-hype-text" class="bar-value-sm tabular-nums">Sĩ khí 0%</span>
+                </div>
+              </div>
+              <div class="rage-weak-row">
+                <div class="bar-track rage-track">
+                  <div id="enemy-rage-fill" class="bar-fill enemy-rage-fill" style="width: 0%"></div>
+                  <span id="enemy-rage-text" class="bar-value-sm tabular-nums">Nộ khí 0%</span>
+                </div>
+              </div>
+              <div id="enemy-status-line" class="status-line enemy-status">Đang dò nhịp</div>
+            </div>
+          </div>
+
+          <button id="btn-pause" class="hud-pause-btn" type="button" aria-label="Tạm dừng">
+            II
+          </button>
+
+          <!-- Linh Ngưu Active Banner -->
+          <div id="linh-nguu-banner" class="linh-nguu-banner hidden">
+            BÙNG NỔ LINH NGƯU · MIỄN STAMINA · ×1.35 UY LỰC
+          </div>
+
+          <!-- Horn Clash Prompt -->
+          <div id="clash-banner" class="clash-banner hidden">
+            <div class="clash-title">ĐẤU SỪNG CÂN NÃO</div>
+            <div class="clash-sub">Nhấp [HÚC] / J / Chuột trái theo nhịp trống!</div>
+          </div>
+
+          <!-- Bronze-Drum Skill Buttons (4 Core Skills + Chiêu Nộ) -->
+          <div id="skill-pad" class="skill-pad">
+            <button id="skill-btn-NO" class="drum-btn drum-btn-rage" data-skill="NO" type="button">
+              <span class="drum-ring"></span>
+              <span class="drum-label">NỘ</span>
+              <span class="drum-key">U · R</span>
+              <span class="drum-cd" data-cd="NO"></span>
+            </button>
+            <button id="skill-btn-HUC" class="drum-btn" data-skill="HUC" type="button">
+              <span class="drum-ring"></span>
+              <span class="drum-label">HÚC</span>
+              <span class="drum-key">J · Chuột trái</span>
+              <span class="drum-cd" data-cd="HUC"></span>
+            </button>
+            <button id="skill-btn-LAO" class="drum-btn" data-skill="LAO" type="button">
+              <span class="drum-ring"></span>
+              <span class="drum-label">LAO</span>
+              <span class="drum-key">K · Space</span>
+              <span class="drum-cd" data-cd="LAO"></span>
+            </button>
+            <button id="skill-btn-MOC" class="drum-btn" data-skill="MOC" type="button">
+              <span class="drum-ring"></span>
+              <span class="drum-label">MÓC</span>
+              <span class="drum-key">L · Chuột phải</span>
+              <span class="drum-cd" data-cd="MOC"></span>
+            </button>
+            <button id="skill-btn-NE" class="drum-btn" data-skill="NE" type="button">
+              <span class="drum-ring"></span>
+              <span class="drum-label">NÉ</span>
+              <span class="drum-key">Shift</span>
+              <span class="drum-cd" data-cd="NE"></span>
+            </button>
+          </div>
+          <!-- HƯỚNG DẪN SỚI TẬP KHAI HỘI (BÔ LÃO CHỦ TẾ) -->
+          <div id="tutorial-overlay" class="tutorial-overlay hidden">
+            <div class="tutorial-top-row">
+              <div class="elder-dialogue-card">
+                <div class="elder-badge" aria-hidden="true">Bô Lão</div>
+                <div class="elder-content">
+                  <div class="elder-header">
+                    <strong id="tut-step-title">Sới Tập Khai Hội</strong>
+                    <span id="tut-progress-text" class="tut-progress tabular-nums">0/3</span>
+                  </div>
+                  <p id="tut-dialogue-text" class="elder-dialogue"></p>
+                </div>
+              </div>
+              <button id="btn-skip-tutorial" class="btn-skip-tutorial" type="button">
+                Bỏ qua hướng dẫn
+              </button>
+            </div>
+
+            <!-- Tutorial Complete Celebration Card -->
+            <div id="tut-complete-card" class="tut-complete-card hidden">
+              <p class="modal-kicker">Hoàn Thành Sới Tập Khai Hội</p>
+              <h2 class="modal-title">Ông Cầu Đã Thuần Thục Nhịp Trống!</h2>
+              <p class="modal-desc">
+                Bô Lão Chủ Tế gật đầu tán thưởng. Giờ hãy tiến vào Vòng 1 đối đầu Bạch Tạng Sơn Cước!
+              </p>
+              <button id="btn-enter-round1" class="btn-primary btn-xl" type="button">
+                Bước Vào Vòng 1 Chính Thức
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- MÀN HÌNH MENU CHÍNH (NGƯU TRẠI HẮC PHONG) -->
+        <section id="screen-menu" class="lobby-overlay">
+          <!-- TOP-CENTER: Carved Wooden Signboard -->
+          <div class="lobby-signboard">
+            <div class="signboard-rope signboard-rope-left" aria-hidden="true"></div>
+            <div class="signboard-rope signboard-rope-right" aria-hidden="true"></div>
+            <div class="signboard-frame">
+              <div class="signboard-corner tl" aria-hidden="true"></div>
+              <div class="signboard-corner tr" aria-hidden="true"></div>
+              <div class="signboard-corner bl" aria-hidden="true"></div>
+              <div class="signboard-corner br" aria-hidden="true"></div>
+              <h1 class="signboard-title">NGƯU TRẠI HẮC PHONG</h1>
+              <p class="signboard-sub">Lễ Hội Chọi Trâu: Sới Hội Remix</p>
+            </div>
+          </div>
+
+          <!-- TOP-LEFT: Player Profile Avatar Frame & Currency -->
+          <div class="lobby-profile-wrap">
+            <div class="lobby-profile-card">
+              <div class="profile-avatar-frame">
+                <canvas id="menu-avatar-canvas" width="64" height="64"></canvas>
+                <span id="menu-player-level" class="profile-level-badge tabular-nums">Cấp 1</span>
+              </div>
+              <div class="profile-details">
+                <div id="menu-player-name" class="profile-name">Chủ Trại Tân Thủ</div>
+                <div id="menu-selected-buffalo" class="profile-farm-sub">Ông Cầu Hắc Phong · Cấp 1</div>
+                <div class="profile-currency-row">
+                  <svg class="currency-icon" viewBox="0 0 24 24" aria-hidden="true">
+                    <circle cx="12" cy="12" r="10" fill="#f5b82e" stroke="#78350f" stroke-width="2" />
+                    <path d="M12 5v14M9 9c1.5 1 4.5 1 6 0M9 14c1.5 1 4.5 1 6 0" stroke="#78350f" stroke-width="1.8" fill="none" stroke-linecap="round" />
+                  </svg>
+                  <span id="menu-stat-points" class="profile-points tabular-nums">0 Chiến Tích</span>
+                </div>
+                <div class="profile-mini-stats tabular-nums">
+                  <span id="menu-stat-stages">Ải: 1/10</span>
+                  <span aria-hidden="true">·</span>
+                  <span id="menu-stat-champs">Vô Địch: 0</span>
+                  <span aria-hidden="true">·</span>
+                  <span id="menu-stat-combo">Combo: 0</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="lobby-left-actions">
+              <button id="btn-start-tutorial" class="lobby-pill-btn" type="button">
+                Sới Tập Khai Hội
+              </button>
+              <button id="btn-open-history" class="lobby-pill-btn" type="button">
+                Lịch Sử &amp; Sao Lưu
+              </button>
+            </div>
+
+            <div class="lobby-gear-tag">
+              <span>Trại: <strong id="menu-farm-name">Ngưu Trại Đại Lễ</strong></span>
+              <span aria-hidden="true">·</span>
+              <span>Sừng: <strong id="menu-equipped-horn">Sừng Cánh Cung</strong></span>
+              <span aria-hidden="true">·</span>
+              <span>Nhạc: <strong id="menu-equipped-track">Trống Hội &amp; Sáo Trúc</strong></span>
+            </div>
+          </div>
+
+          <!-- BOTTOM-RIGHT: 4 Bold Folk-Remix Buttons -->
+          <div class="lobby-bottom-right">
+            <button id="btn-start-festival" class="lobby-play-btn" type="button">
+              <span class="play-btn-rim" aria-hidden="true"></span>
+              <span class="play-btn-text">CHƠI</span>
+              <span class="play-btn-sub">Chọn Ải Huấn Luyện</span>
+            </button>
+
+            <div class="lobby-sub-buttons">
+              <button id="btn-open-shop" class="lobby-wood-btn" type="button">
+                <svg class="wood-btn-icon" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M4 9h16l-1.5 10h-13L4 9zm2-4h12l2 4H4l2-4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+                  <path d="M9 13v2m6-2v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                </svg>
+                <span>CỬA HÀNG</span>
+              </button>
+              <button id="btn-open-guide" class="lobby-wood-btn" type="button">
+                <svg class="wood-btn-icon" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M6 4h11a2 2 0 0 1 2 2v14l-3-2-3 2-3-2-3 2V6a2 2 0 0 1 2-2z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+                  <path d="M9 9h6M9 13h4" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                </svg>
+                <span>HƯỚNG DẪN</span>
+              </button>
+              <button id="btn-open-settings" class="lobby-wood-btn" type="button">
+                <svg class="wood-btn-icon" viewBox="0 0 24 24" aria-hidden="true">
+                  <circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2" />
+                  <path d="M12 2v3m0 14v3M4.9 4.9l2.1 2.1m10 10l2.1 2.1M2 12h3m14 0h3M4.9 19.1l2.1-2.1m10-10l2.1-2.1" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                </svg>
+                <span>CÀI ĐẶT</span>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- MÀN HÌNH INTRO NGHI LỄ (3 KHUNG CẢNH) -->
+        <section id="screen-intro" class="overlay-screen hidden">
+          <div class="intro-card">
+            <div class="intro-header">
+              <span id="intro-step-label" class="tabular-nums">Nghi Lễ 1 / 3</span>
+              <button id="btn-intro-skip" class="btn-ghost" type="button">Bỏ qua</button>
+            </div>
+            <div class="intro-visual-box">
+              <canvas id="intro-canvas" width="640" height="240"></canvas>
+            </div>
+            <h2 id="intro-title" class="intro-title">Sáng Mùng 9 Tháng 8 Âm Lịch</h2>
+            <p id="intro-text" class="intro-text"></p>
+            <div class="intro-footer">
+              <button id="btn-intro-next" class="btn-primary" type="button">Tiếp Tục</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- MÀN HÌNH TẠM DỪNG (PAUSED) -->
+        <section id="screen-paused" class="overlay-screen hidden">
+          <div class="modal-card modal-sm">
+            <h2 class="modal-title">Tạm Dừng Sới Đấu</h2>
+            <p class="modal-desc">Nhịp trống đang tạm ngưng chờ hiệu lệnh của Ông Cầu.</p>
+            <div class="stack-actions">
+              <button id="btn-resume" class="btn-primary" type="button">Tiếp Tục Trận Đấu</button>
+              <button id="btn-restart-from-pause" class="btn-secondary" type="button">
+                Chơi Lại Từ Vòng 1
+              </button>
+              <button id="btn-toggle-sound-pause" class="btn-secondary" type="button">
+                Âm Thanh: Bật
+              </button>
+              <button id="btn-toggle-touch-pause" class="btn-secondary" type="button">
+                Nút Cảm Ứng: Tự Động
+              </button>
+              <button id="btn-exit-menu-pause" class="btn-ghost-danger" type="button">
+                Về Menu Chính
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- MÀN HÌNH TỔNG KẾT HIỆP ĐẤU (ROUND_RESULT) -->
+        <section id="screen-round-result" class="overlay-screen hidden">
+          <div class="modal-card modal-md">
+            <p id="round-result-reason" class="modal-kicker">RING-OUT · ĐẨY KHỎI VẠCH VÔI</p>
+            <h2 id="round-result-title" class="modal-title">Chiến Thắng Vòng 1</h2>
+            <div class="stats-grid-4">
+              <div class="stat-cell">
+                <span class="stat-label">Perfect</span>
+                <strong id="rr-perfect" class="stat-num tabular-nums">0</strong>
+              </div>
+              <div class="stat-cell">
+                <span class="stat-label">Good</span>
+                <strong id="rr-good" class="stat-num tabular-nums">0</strong>
+              </div>
+              <div class="stat-cell">
+                <span class="stat-label">Miss</span>
+                <strong id="rr-miss" class="stat-num tabular-nums">0</strong>
+              </div>
+              <div class="stat-cell">
+                <span class="stat-label">Max Combo</span>
+                <strong id="rr-combo" class="stat-num tabular-nums">0</strong>
+              </div>
+            </div>
+            <p id="round-result-heal" class="modal-note">
+              Ông Cầu Hắc Phong được hồi phục +40% Sinh Lực chuẩn bị cho vòng kế tiếp.
+            </p>
+            <button id="btn-next-round" class="btn-primary btn-xl" type="button">
+              Vào Vòng Tiếp Theo
+            </button>
+          </div>
+        </section>
+
+        <!-- MÀN HÌNH CHIẾN THẮNG ĐẠI LỄ / VƯỢT ẢI (VICTORY) -->
+        <section id="screen-victory" class="overlay-screen hidden">
+          <div class="modal-card modal-lg victory-card">
+            <p id="vic-kicker" class="modal-kicker">Vô Địch Đại Lễ · Rước Kiệu Cầu Mùa</p>
+            <h2 id="vic-title" class="modal-title">Mưa Thuận Gió Hòa, Sóng Yên Biển Lặng</h2>
+            <p id="vic-reward-banner" class="reward-banner hidden"></p>
+            <div class="victory-visual-wrap">
+              <canvas id="victory-canvas" width="560" height="190"></canvas>
+            </div>
+            <div class="stats-grid-4">
+              <div class="stat-cell">
+                <span class="stat-label">Điểm Chiến Tích</span>
+                <strong id="vic-points" class="stat-num highlight-gold tabular-nums">+0</strong>
+              </div>
+              <div class="stat-cell">
+                <span class="stat-label">Perfect</span>
+                <strong id="vic-perfect" class="stat-num tabular-nums">0</strong>
+              </div>
+              <div class="stat-cell">
+                <span class="stat-label">Max Combo</span>
+                <strong id="vic-combo" class="stat-num tabular-nums">0</strong>
+              </div>
+              <div class="stat-cell">
+                <span class="stat-label">Cách Thắng</span>
+                <strong id="vic-reason" class="stat-num">RING-OUT</strong>
+              </div>
+            </div>
+            <div class="modal-actions-row">
+              <button id="btn-victory-next-stage" class="btn-primary hidden" type="button">
+                Ải Kế Tiếp
+              </button>
+              <button id="btn-victory-replay" class="btn-primary" type="button">
+                Mở Đại Lễ Mới
+              </button>
+              <button id="btn-victory-menu" class="btn-secondary" type="button">
+                Về Ngưu Trại
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- MÀN HÌNH THẤT BẠI (GAME_OVER) -->
+        <section id="screen-gameover" class="overlay-screen hidden">
+          <div class="modal-card modal-md">
+            <p id="go-reason" class="modal-kicker">RING-OUT · BƯỚC RA KHỎI VẠCH VÔI</p>
+            <h2 class="modal-title">Lỡ Nhịp Sới Hội</h2>
+            <p id="go-advice" class="modal-desc">
+              Bô Lão khuyên: Hãy nâng cấp chiến trâu tại Cửa Hàng hoặc giữ Thế Trụ ở trung tâm sới chọi!
+            </p>
+            <div class="stats-grid-4">
+              <div class="stat-cell">
+                <span class="stat-label">Ải / Vòng</span>
+                <strong id="go-round" class="stat-num tabular-nums">1 / 3</strong>
+              </div>
+              <div class="stat-cell">
+                <span class="stat-label">Chiến Tích</span>
+                <strong id="go-points" class="stat-num highlight-gold tabular-nums">+0</strong>
+              </div>
+              <div class="stat-cell">
+                <span class="stat-label">Perfect</span>
+                <strong id="go-perfect" class="stat-num tabular-nums">0</strong>
+              </div>
+              <div class="stat-cell">
+                <span class="stat-label">Max Combo</span>
+                <strong id="go-combo" class="stat-num tabular-nums">0</strong>
+              </div>
+            </div>
+            <div class="modal-actions-row">
+              <button id="btn-retry-round" class="btn-primary" type="button">
+                Thử Lại
+              </button>
+              <button id="btn-gameover-shop" class="btn-secondary" type="button">
+                Vào Cửa Hàng
+              </button>
+              <button id="btn-gameover-menu" class="btn-secondary" type="button">
+                Về Ngưu Trại
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- MODAL CHỌN ẢI HUẤN LUYỆN (10 ẢI) -->
+        <section id="modal-stages" class="overlay-screen hidden">
+          <div class="modal-card modal-lg">
+            <div class="modal-header-bar">
+              <div>
+                <h2 class="modal-title">Chiến Dịch Huấn Luyện Ngưu Trại (10 Ải)</h2>
+                <p class="modal-sub">
+                  Điểm Chiến Tích:
+                  <strong id="stages-merit-balance" class="highlight-gold tabular-nums">0</strong>
+                  &middot; Tiến Độ Mở Khóa:
+                  <strong id="stages-unlocked-progress" class="highlight-gold tabular-nums">1 / 10</strong>
+                </p>
+              </div>
+              <div class="stages-header-actions">
+                <button id="btn-stages-to-shop" class="btn-secondary btn-sm" type="button">
+                  Cửa Hàng
+                </button>
+                <button id="btn-stages-classic" class="btn-secondary btn-sm" type="button">
+                  Đại Lễ 3 Vòng
+                </button>
+                <button id="btn-close-stages" class="btn-ghost" type="button">Đóng</button>
+              </div>
+            </div>
+
+            <div class="stages-deploy-bar">
+              <div class="deploy-label">Chọn Trâu Xuất Chiến:</div>
+              <div id="stages-buffalo-switcher" class="stages-buffalo-switcher"></div>
+              <div id="stages-active-stats" class="stages-active-stats tabular-nums"></div>
+            </div>
+
+            <div id="stages-grid" class="stages-grid"></div>
+          </div>
+        </section>
+
+        <!-- MODAL CỬA HÀNG (3 TAB: TUYỂN TRÂU, NÂNG CẤP TRÂU, SKILL NỘ) -->
+        <section id="modal-shop" class="overlay-screen hidden">
+          <div class="modal-card modal-lg">
+            <div class="modal-header-bar">
+              <div>
+                <h2 class="modal-title">Cửa Hàng Ngưu Trại</h2>
+                <p class="modal-sub">
+                  Điểm Chiến Tích hiện có:
+                  <strong id="shop-points-balance" class="highlight-gold tabular-nums">0</strong>
+                </p>
+              </div>
+              <button id="btn-close-shop" class="btn-ghost" type="button">Đóng</button>
+            </div>
+
+            <div class="shop-tabs-bar">
+              <button class="shop-tab-btn active" data-shop-tab="buffaloes" type="button">
+                1. Tuyển Trâu Chiến
+              </button>
+              <button class="shop-tab-btn" data-shop-tab="upgrades" type="button">
+                2. Vật Phẩm Nâng Cấp Trâu
+              </button>
+              <button class="shop-tab-btn" data-shop-tab="skills" type="button">
+                3. Nâng Cấp Skill Nộ
+              </button>
+            </div>
+
+            <div id="shop-feedback" class="history-feedback hidden"></div>
+
+            <!-- Tab 1: Tuyển Trâu Chiến -->
+            <div id="shop-panel-buffaloes" class="shop-tab-panel">
+              <div id="shop-buffaloes-grid" class="shop-buffaloes-grid"></div>
+            </div>
+
+            <!-- Tab 2: Vật Phẩm Nâng Cấp Trâu + Trang Bị Ngoại Hình -->
+            <div id="shop-panel-upgrades" class="shop-tab-panel hidden">
+              <div id="shop-upgrade-target" class="shop-upgrade-target"></div>
+              <div id="shop-upgrade-items-list" class="shop-list" style="margin-bottom: 14px;"></div>
+              <div class="shop-columns">
+                <div class="shop-col">
+                  <h3 class="shop-col-title">Ngoại Hình Sừng</h3>
+                  <div id="shop-horns-list" class="shop-list"></div>
+                </div>
+                <div class="shop-col">
+                  <h3 class="shop-col-title">Bản Phối Điệu Trống</h3>
+                  <div id="shop-tracks-list" class="shop-list"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Tab 3: Nâng Cấp Skill Nộ -->
+            <div id="shop-panel-skills" class="shop-tab-panel hidden">
+              <div id="shop-skill-card-wrap"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- MODAL HƯỚNG DẪN -->
+        <section id="modal-guide" class="overlay-screen hidden">
+          <div class="modal-card modal-lg">
+            <div class="modal-header-bar">
+              <h2 class="modal-title">Luật Sới Hội &amp; Tương Khắc Kỹ Năng</h2>
+              <button id="btn-close-guide" class="btn-ghost" type="button">Đóng</button>
+            </div>
+            <div class="guide-grid">
+              <div class="guide-block">
+                <h3>1. Bắt Nhịp &amp; Tích Lũy Điểm Yếu</h3>
+                <p>
+                  Ra đòn đúng nhịp trống: <strong>PERFECT (&le;80ms)</strong> nhân ×1.45 uy lực,
+                  hồi +8% Thể lực và +15% Sĩ Khí. Đánh trúng vòng ngắm <strong>Điểm Yếu</strong>
+                  trên địch (hoặc lách <strong>Né Bước</strong> sang mạn sườn để tấn công) sẽ tích lũy
+                  tối đa 5 tầng (+15% sát thương mỗi tầng, lên tới +75%)!
+                </p>
+              </div>
+              <div class="guide-block">
+                <h3>2. Ma Trận Kỹ Năng &amp; Chiêu Nộ</h3>
+                <ul>
+                  <li><strong>Húc Thẳng (J / Chuột trái):</strong> Ra đòn nhanh, thắng Móc Cống, có tỷ lệ hất văng địch.</li>
+                  <li><strong>Hổ Lao (K / Space):</strong> Hất văng cực mạnh, phá vỡ Húc Thẳng.</li>
+                  <li><strong>Móc Cống (L / Chuột phải):</strong> Khắc chế chí mạng Hổ Lao (×1.4 DMG + Choáng 0.8s).</li>
+                  <li><strong>Né Bước (Shift):</strong> Lách ngang dài (0.68s) tránh đòn &amp; mở góc đánh Điểm Yếu.</li>
+                  <li><strong>Lôi Ngưu Cuồng Nộ (U / R):</strong> Khi đầy 100% Nộ Khí, tung tuyệt chiêu sát thương cực đại &amp; hất văng!</li>
+                </ul>
+              </div>
+              <div class="guide-block">
+                <h3>3. Đấu Sừng Cân Não &amp; Linh Ngưu</h3>
+                <p>
+                  Khi hai trâu cùng tung Húc Thẳng hoặc Hổ Lao, <strong>Đấu Sừng 3 giây</strong> nổ
+                  ra: nhấp tấn công theo nhịp trống để đẩy thanh giằng co thắng đối thủ. Đạt
+                  <strong>100% Sĩ Khí</strong> sẽ hóa thân <strong>Linh Ngưu 8 giây</strong> miễn
+                  Stamina và kháng đẩy lùi!
+                </p>
+              </div>
+              <div class="guide-block">
+                <h3>4. Hất Văng &amp; Thắng Ring-Out</h3>
+                <p>
+                  Mỗi đòn trúng đều có khả năng <strong>Hất Văng</strong> đối thủ lùi sâu trên sân bùn.
+                  Đứng sát vạch vôi trắng khiến <strong>Thế Trụ (Balance)</strong> giảm xuống 25%,
+                  dễ bị đẩy văng vượt vạch vôi trắng để giành chiến thắng ngay lập tức!
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- MODAL CÀI ĐẶT -->
+        <section id="modal-settings" class="overlay-screen hidden">
+          <div class="modal-card modal-sm">
+            <div class="modal-header-bar">
+              <h2 class="modal-title">Cài Đặt</h2>
+              <button id="btn-close-settings" class="btn-ghost" type="button">Đóng</button>
+            </div>
+            <div class="settings-list">
+              <label class="setting-row">
+                <span>Âm thanh &amp; Nhạc nền</span>
+                <input id="setting-sound-toggle" type="checkbox" checked />
+              </label>
+              <label class="setting-row">
+                <span>Rung phản hồi (Mobile Haptic)</span>
+                <input id="setting-haptic-toggle" type="checkbox" checked />
+              </label>
+              <div class="setting-row">
+                <span>Chế độ nút cảm ứng</span>
+                <select id="setting-touch-mode">
+                  <option value="auto">Tự động (Mobile)</option>
+                  <option value="always">Luôn hiển thị</option>
+                  <option value="hide">Ẩn nút cảm ứng</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- MODAL LỊCH SỬ ĐẠI LỄ (50 TRẬN + EXPORT/IMPORT AUTO-MERGE JSON) -->
+        <section id="modal-history" class="overlay-screen hidden">
+          <div class="modal-card modal-lg">
+            <div class="modal-header-bar">
+              <div>
+                <h2 class="modal-title">Lịch Sử Đại Lễ</h2>
+                <p class="modal-sub">Lưu tối đa 50 trận gần nhất &amp; đồng bộ JSON đa thiết bị</p>
+              </div>
+              <button id="btn-close-history" class="btn-ghost" type="button">Đóng</button>
+            </div>
+
+            <div class="history-toolbar">
+              <div class="history-summary-line">
+                <span id="hist-total-points" class="tabular-nums">Tổng Điểm: 0</span>
+                <span aria-hidden="true">·</span>
+                <span id="hist-total-champs" class="tabular-nums">Vô Địch: 0</span>
+                <span aria-hidden="true">·</span>
+                <span id="hist-max-combo" class="tabular-nums">Max Combo: 0</span>
+              </div>
+              <div class="history-io-buttons">
+                <button id="btn-export-json" class="btn-secondary btn-sm" type="button">
+                  Xuất JSON
+                </button>
+                <label class="btn-secondary btn-sm file-upload-btn">
+                  Nhập &amp; Gộp JSON
+                  <input id="input-import-json" type="file" accept=".json,application/json" hidden />
+                </label>
+              </div>
+            </div>
+
+            <div id="history-feedback" class="history-feedback hidden"></div>
+
+            <div class="history-table-wrap">
+              <table class="history-table">
+                <thead>
+                  <tr>
+                    <th>Thời Gian</th>
+                    <th>Kết Quả</th>
+                    <th>Vòng / Đối Thủ</th>
+                    <th>Lý Do</th>
+                    <th>P / G / M</th>
+                    <th>Combo</th>
+                    <th>Điểm</th>
+                  </tr>
+                </thead>
+                <tbody id="history-tbody"></tbody>
+              </table>
+              <div id="history-empty" class="history-empty hidden">
+                Chưa có trận đấu nào được ghi nhận. Hãy mở Đại Lễ đầu tiên!
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <script type="module" src="/src/game/main.js"></script>
+  </body>
+</html>
